@@ -19,9 +19,9 @@ jobs:
         major_version=$(echo $BRANCH | cut -f1 -d.)
         minor_version=$(echo $BRANCH | cut -f2 -d.)
         patch_version=$(echo $BRANCH | cut -f3 -d.)
-        echo "major_version=${parts[0]}" >> $GITHUB_OUTPUT
-        echo "minor_version=${parts[1]}" >> $GITHUB_OUTPUT
-        echo "patch_version=${parts[2]}" >> $GITHUB_OUTPUT
+        echo "major_version=${major_version}" >> $GITHUB_OUTPUT
+        echo "minor_version=${minor_version}" >> $GITHUB_OUTPUT
+        echo "patch_version=${patch_version}" >> $GITHUB_OUTPUT
     - name: Configure CMake
       env:
         MAJOR_VERSION: ${{ steps.version_number.outputs.major_version }}
