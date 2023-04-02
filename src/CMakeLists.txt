@@ -36,11 +36,3 @@ FOREACH (x IN LISTS AWSSDK_LIBRARIES)
     message("${AWSSDK_LIB_DIR}/lib${x}.so -> ${CMAKE_INSTALL_FULL_LIBDIR}/")
     install(FILES "${AWSSDK_LIB_DIR}/lib${x}.so" DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 ENDFOREACH ()
-
-
-#
-#get_cmake_property(_variableNames VARIABLES)
-#list (SORT _variableNames)
-#foreach (_variableName ${_variableNames})
-#    message("${_variableName}=${${_variableName}}")
-#endforeach()
