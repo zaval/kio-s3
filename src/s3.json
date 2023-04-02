@@ -1,0 +1,19 @@
+{
+    "KDE-KIO-Protocols": {
+        "s3": {
+            "ExtraNames": [
+            ],
+            "input": "none",
+            "listing": [
+                "Name",
+                "Type",
+                "Size",
+                "Access",
+                "Date"
+            ],
+            "output": "filesystem",
+            "protocol": "s3",
+            "reading": true
+        }
+    }
+}

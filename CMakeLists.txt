@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.16)
+
+set(CMAKE_CXX_STANDARD 17)
+project(kio_aws_s3)
+set(QT_MIN_VERSION "5.15.2")
+set(KF5_MIN_VERSION "5.96.0")
+find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMQtDeclareLoggingCategory)
+include(FeatureSummary)
+
+find_package(Qt${QT_MAJOR_VERSION} ${QT_MIN_VERSION} CONFIG REQUIRED Core)
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+    KIO
+    I18n
+)
+
+find_package(ZLIB)
+find_package(AWSSDK REQUIRED COMPONENTS s3)
+add_subdirectory(src)
+
+ki18n_install(po)
+
+add_subdirectory(tests)
+
+enable_testing()
+set(CPACK_PACKAGE_NAME "kio-s3")
+set(CPACK_PACKAGE_VENDOR "Zaval")
+set(CPACK_PACKAGE_CONTACT "https://zaval.me")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "dzavalny@gmail.com")
+set(CPACK_PACKAGE_DESCRIPTION "KIO Slave module for AWS S3")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+if (DEFINED ENV{PATCH_VERSION})
+    set(CPACK_PACKAGE_VERSION_PATCH "$ENV{PATCH_VERSION}")
+else()
+    set(CPACK_PACKAGE_VERSION_PATCH "0")
+endif()
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>=5.15.2), libkf5kiocore5 (>=5.96.0-0), libkf5i18n5 (>=5.96.0-0), zlib1g (>=1:1.2), libcurl3-gnutls (>=7.0.0)")
+SET(CPACK_GENERATOR "DEB")
+include(CPack)
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
