@@ -17,7 +17,8 @@ jobs:
         BRANCH: ${{ github.ref_name }}
       id: version_number
       run: |
-        version=$(git describe --tags)
+        tag=$(git describe --tags)
+        version=${tag%%-*}
         IFS='.' read -r -a parts <<< $version
         echo "major_version=${parts[0]}" >> $GITHUB_OUTPUT
         echo "minor_version=${parts[1]}" >> $GITHUB_OUTPUT
