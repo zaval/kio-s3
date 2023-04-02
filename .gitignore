@@ -51,3 +51,4 @@ compile_commands.json
 *_qmlcache.qrc
 .idea
 venv
+bin
