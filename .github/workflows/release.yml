@@ -17,6 +17,7 @@ jobs:
         BRANCH: ${{ github.ref_name }}
       id: version_number
       run: |
+        git config --global --add safe.directory /__w/kio-s3/kio-s3
         tag=$(git describe --tags)
         version=${tag%%-*}
         IFS='.' read -r -a parts <<< $version
