@@ -33,7 +33,7 @@ jobs:
         MAJOR_VERSION: ${{ steps.version_number.outputs.major_version }}
         MINOR_VERSION: ${{ steps.version_number.outputs.minor_version }}
         PATCH_VERSION: ${{ steps.version_number.outputs.patch_version }}
-      run: cmake --build build --config ${{env.BUILD_TYPE}}
+      run: cmake --build build --config Release
     - name: CPack
       env:
         MAJOR_VERSION: ${{ steps.version_number.outputs.major_version }}
