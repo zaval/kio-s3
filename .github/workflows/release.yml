@@ -50,7 +50,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ steps.version_number.outputs.major_version }}.${{ steps.version_number.outputs.minor_version }}.${{ steps.version_number.outputs.patch_version }}-Linux
+        release_name: Release ${{ steps.version_number.outputs.major_version }}.${{ steps.version_number.outputs.minor_version }}.${{ steps.version_number.outputs.patch_version }}
         draft: false
         prerelease: false
     - name: Upload Release Asset
