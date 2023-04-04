@@ -1,4 +1,4 @@
-name: CMake
+name: Test
 
 on:
   push:
@@ -15,27 +15,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: 
-      image: zavalny/plasma-kio-aws-dev:latest
+      image: ghcr.io/zaval/kio-s3:main
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DAWSSDK_DIR=/home/neon/aws-sdk/lib/cmake/AWSSDK -DCMAKE_PREFIX_PATH=/home/neon/aws-sdk
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DAWSSDK_DIR=/home/neon/aws-sdk/lib/cmake/AWSSDK -DCMAKE_PREFIX_PATH=/home/neon/aws-sdk -DENABLE_TESTING=1
 
-    - name: Build
+    - name: Build & Test
       env:
         PATCH_VERSION: ${{ github.run_id }}
-      run: cmake --build build --config ${{env.BUILD_TYPE}}
-
-    - name: CPack
       run: |
-        cd build 
-        cpack 
-        cp kio-s3-1.0.${{ github.run_id }}-Linux.deb ../kio-s3-1.0.${{ github.run_id }}-Linux.deb
+        cmake --build build --config ${{env.BUILD_TYPE}}
+        cd build
+        ctest --output-junit report.xml
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
       with:
-        name: S3-KIO
-        path: ./kio-s3-1.0.${{ github.run_id }}-Linux.deb
+        name: CMake Tests
+        path: build/report.xml
+        reporter: java-junit
+
+#    - name: CPack
+#      run: |
+#        cd build
+#        cpack
+#        cp kio-s3-1.0.${{ github.run_id }}-Linux.deb ../kio-s3-1.0.${{ github.run_id }}-Linux.deb
+#
+#    - name: Upload artifact
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: S3-KIO
+#        path: ./kio-s3-1.0.${{ github.run_id }}-Linux.deb

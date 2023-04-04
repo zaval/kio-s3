@@ -58,26 +58,29 @@ KIO::WorkerResult kio_aws_s3::get(const QUrl &url)
         path.remove(0, 1);
     }
 
+    const auto sz = m_fs.size(url.host(), path);
+    qCDebug(KIO_AWS_S3_LOG) << "totalSize" << sz;
+    totalSize(sz);
+
     QMimeDatabase db;
     const auto &mime = db.mimeTypeForFile(url.path());
 
-    // as first notify about the MIME type, so the handler can be selected
-//    mimeType(QStringLiteral("text/plain"));
     mimeType(mime.name());
-
-    auto response = m_client.openFile(url.host(), path);
+    auto response = m_fs.open(url.host(), path);
     if (!response.IsSuccess()){
         return KIO::WorkerResult::fail();
     }
 
+
     auto body = &response.GetResult().GetBody();
 
-    char buf[256];
+    char buf[1024];
     while(!body->eof()){
         long i = body->read(buf, std::size(buf)).gcount();
-        qCDebug(KIO_AWS_S3_LOG) << "read" << i << "bytes";
+//        qCDebug(KIO_AWS_S3_LOG) << "read" << i << "bytes";
         data(QByteArray(buf, static_cast<int>(i)));
     }
+
 
 
     // now emit the data...
@@ -103,10 +106,6 @@ KIO::WorkerResult kio_aws_s3::listDir(const QUrl &url)
 {
     qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting listDir" << url;
     KIO::UDSEntry currentFolderEntry;
-    for (const auto &k: m_filesystem.keys()){
-        qCDebug(KIO_AWS_S3_LOG) << k;
-    }
-
     currentFolderEntry.reserve(4);
     currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_NAME, QStringLiteral("."));
     currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_MIME_TYPE, QStringLiteral("inode/directory"));
@@ -114,22 +113,21 @@ KIO::WorkerResult kio_aws_s3::listDir(const QUrl &url)
     currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH);
     listEntry(currentFolderEntry);
 
-    QString path = url.path();
-    if (path.startsWith(QLatin1Char('/'))) {
-        path.remove(0, 1);
-    }
-    if (url.host().isEmpty()){
-        const auto &buckets = m_client.buckets();
-        for (const auto &b: buckets){
-            m_filesystem.insert(b.stringValue(KIO::UDSEntry::UDS_URL), b);
-            listEntry(b);
-        }
-    } else {
-        const auto &files = m_client.list(url.host(), path);
-        for (const auto &f: files){
-            m_filesystem.insert(f.stringValue(KIO::UDSEntry::UDS_URL), f);
-            listEntry(f);
-        }
+    const auto &entries = m_fs.ls(url);
+    for (const auto &e: entries){
+        KIO::UDSEntry entry;
+        entry.reserve(6);
+        entry.fastInsert(KIO::UDSEntry::UDS_NAME, e.name);
+        entry.fastInsert(KIO::UDSEntry::UDS_MIME_TYPE, e.mime);
+        entry.fastInsert(KIO::UDSEntry::UDS_FILE_TYPE, e.type == FSType::REGULAR_FILE ? S_IFREG : S_IFDIR);
+        entry.fastInsert(KIO::UDSEntry::UDS_SIZE, e.size);
+        entry.fastInsert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH);
+        entry.fastInsert(KIO::UDSEntry::UDS_MODIFICATION_TIME, e.time);
+        entry.fastInsert(KIO::UDSEntry::UDS_URL, e.url.toString());
+
+        m_filesystem.insert(entry.stringValue(KIO::UDSEntry::UDS_URL), entry);
+
+        listEntry(entry);
     }
 
     return KIO::WorkerResult::pass();
