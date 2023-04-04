@@ -1,11 +1,13 @@
 add_definitions(-DTRANSLATION_DOMAIN=\"kio_aws_s3\")
 
-add_library(kio_aws_s3 )
+add_library(kio_aws_s3 AWSClientAbstract.cpp AWSClientAbstract.h S3FileSystem.cpp S3FileSystem.h)
 set_target_properties(kio_aws_s3 PROPERTIES OUTPUT_NAME "s3")
 
 target_sources(kio_aws_s3 PRIVATE
     kio_aws_s3.cpp
+    AWSClientAbstract.cpp
     AWSClient.cpp
+    S3FileSystem.cpp
 )
 
 ecm_qt_declare_logging_category(kio_aws_s3

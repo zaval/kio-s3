@@ -24,10 +24,10 @@ find_package(AWSSDK REQUIRED COMPONENTS s3)
 add_subdirectory(src)
 
 ki18n_install(po)
+if (DEFINED ENABLE_TESTING)
+    add_subdirectory(tests)
+endif ()
 
-add_subdirectory(tests)
-
-enable_testing()
 set(CPACK_PACKAGE_NAME "kio-s3")
 set(CPACK_PACKAGE_VENDOR "Zaval")
 set(CPACK_PACKAGE_CONTACT "https://zaval.me")

@@ -15,6 +15,7 @@
 #include <aws/s3/S3Client.h>
 #include <sstream>
 #include "AWSClient.h"
+#include "S3FileSystem.h"
 
 class kio_aws_s3 : public KIO::WorkerBase
 {
@@ -28,8 +29,8 @@ public:
     KIO::WorkerResult listDir(const QUrl &url) override;
 
 private:
-    AWSClient m_client;
     QHash<QString, KIO::UDSEntry> m_filesystem;
+    S3FileSystem m_fs;
 
 };
 
