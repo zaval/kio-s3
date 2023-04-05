@@ -3,6 +3,7 @@
 #include "../src/AWSClientAbstract.h"
 #include "../src/S3FileSystem.h"
 #include <QCoreApplication>
+#include <QStandardPaths>
 
 #define qCDebug(X) qDebug() << "X"
 using ::testing::Return;
@@ -13,6 +14,8 @@ public:
     MOCK_METHOD(QList<FSEntry>, buckets, (), (const, override));
     MOCK_METHOD(long long, size, (const QString &bucket, const QString& folder), (const, override));
     MOCK_METHOD((Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error>), openFile, (const QString &bucket, const QString &path), (override));
+    MOCK_METHOD(void, putFile, (const QString &bucket, const QString &path, const QString &fname), (override));
+    MOCK_METHOD(void, deleteFile, (const QString &bucket, const QString &path), (override));
 };
 
 TEST(kio_aws_s3, buckets) {
@@ -48,3 +51,43 @@ TEST(kio_aws_s3, ls){
 }
 
 
+TEST(kio_aws_s3, open) {
+    MockAWSClient mock;
+    Aws::S3::Model::GetObjectResult result;
+    auto *ss = new std::istringstream("hello");
+    result.ReplaceBody(reinterpret_cast<Aws::IOStream *>(ss));
+    Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> outcome(std::move(result));
+
+    EXPECT_CALL(mock, openFile(QStringLiteral("name1"), QStringLiteral("folder/file.txt")))
+        .WillOnce(Return(std::move(outcome)));
+    S3FileSystem fs(&mock);
+    auto res = fs.open(QUrl(QStringLiteral("s3://name1/folder/file.txt")));
+    char data[6];
+    res.GetResult().GetBody().read(data, 10);
+
+    EXPECT_TRUE(std::strcmp(data, "hello") == 0);
+
+}
+
+TEST(kio_aws_s3, size) {
+    MockAWSClient mock;
+    EXPECT_CALL(mock, size(QStringLiteral("name1"), QStringLiteral("folder/file.txt")))
+            .WillOnce(Return(10));
+    S3FileSystem fs(&mock);
+    auto res = fs.size(QUrl(QStringLiteral("s3://name1/folder/file.txt")));
+    EXPECT_EQ(res, 10);
+
+}
+
+TEST(kio_aws_s3, mkdir) {
+    MockAWSClient mock;
+    S3FileSystem fs(&mock);
+    const QUrl &url = QUrl(QStringLiteral("s3://name1/folder"));
+    fs.mkdir(url);
+
+    QDir d(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    EXPECT_TRUE(d.exists(url.host() + url.path()));
+    d.cd(url.host() + url.path());
+    d.removeRecursively();
+
+}

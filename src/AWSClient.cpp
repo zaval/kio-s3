@@ -1,8 +1,9 @@
 #include <aws/s3/model/ListObjectsV2Request.h>
 #include <aws/s3/model/GetObjectRequest.h>
+#include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/DeleteObjectRequest.h>
 #include "AWSClient.h"
 #include <QDebug>
-#include <QBuffer>
 #include <QDataStream>
 #include <QMimeDatabase>
 #include <QStandardPaths>
@@ -12,6 +13,7 @@
 AWSClient::AWSClient() {
 
     Aws::SDKOptions options;
+    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     InitAPI(options);
     m_client = std::make_unique<Aws::S3::S3Client>();
 }
@@ -101,4 +103,29 @@ long long AWSClient::size(const QString &bucket, const QString &folder) const {
         return 0;
     }
     return response.GetResult().GetContents()[0].GetSize();
+}
+
+void AWSClient::putFile(const QString &bucket, const QString &path, const QString &fname) {
+    Aws::S3::Model::PutObjectRequest request;
+    request
+        .WithBucket(bucket.toStdString())
+        .WithKey(path.toStdString());
+
+    const auto f_ptr = std::make_shared<Aws::IFStream>(fname.toStdString());
+
+    request.SetBody((const shared_ptr<Aws::IOStream> &) f_ptr);
+    auto response = m_client->PutObject(request);
+    if (!response.IsSuccess()){
+        qDebug() << QString::fromStdString(response.GetError().GetMessage());
+    }
+    f_ptr->close();
+}
+
+void AWSClient::deleteFile(const QString &bucket, const QString &path) {
+    Aws::S3::Model::DeleteObjectRequest request;
+    request
+        .WithBucket(bucket.toStdString())
+        .WithKey(path.toStdString());
+
+    m_client->DeleteObject(request);
 }

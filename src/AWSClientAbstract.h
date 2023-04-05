@@ -19,7 +19,7 @@ enum FSType {
     DIRECTORY
 };
 
-class FSEntry{
+class FSEntry {
 public:
     QString name;
     QUrl url;
@@ -37,6 +37,8 @@ public:
     virtual long long size(const QString &bucket, const QString& folder) const = 0;
     virtual QList<FSEntry> buckets() const = 0;
     virtual Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> openFile(const QString &bucket, const QString &path) = 0;
+    virtual void putFile(const QString &bucket, const QString &path, const QString &fname) = 0;
+    virtual void deleteFile(const QString &bucket, const QString &path) = 0;
 };
 
 

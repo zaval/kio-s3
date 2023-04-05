@@ -10,6 +10,7 @@
 
 #include "AWSClientAbstract.h"
 #include "AWSClient.h"
+#include <QSet>
 
 
 using namespace std;
@@ -19,15 +20,18 @@ public:
     S3FileSystem();
     explicit S3FileSystem(AWSClientAbstract *client);
     QList<FSEntry> ls(const QUrl &url);
-    Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> open(const QString &bucket, const QString &path);
-    [[nodiscard]] long long size(const QString &bucket, const QString &path) const;
-    void mkdir(const QString &bucket, const QString &path);
+    Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> open(const QUrl &url);
+    [[nodiscard]] long long size(const QUrl &url) const;
+    void mkdir(const QUrl &url);
+    void put(const QUrl &url, const QString &fname);
+    void del(const QUrl &url);
 
 //    static const QString cachePath;
 
 
 private:
     AWSClientAbstract *m_client;
+    [[nodiscard]] QString normalizePath(const QUrl &url) const;
 //    const QString &cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
 };
 

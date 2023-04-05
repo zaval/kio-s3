@@ -19,7 +19,9 @@
             "linking": true,
             "moving": true,
             "opening": true,
-            "copyFromFile": true
+            "copyFromFile": true,
+            "deleteRecursive": true,
+            "deleting": true
         }
     }
 }

@@ -27,39 +27,72 @@ QList<FSEntry> S3FileSystem::ls(const QUrl &url) {
     }
 
     QList<FSEntry> entities;
-
+    QSet<QUrl> entityUrls;
+    for (const auto &elem : m_client->list(url.host(), path)){
+        entities << elem;
+        entityUrls.insert(elem.url);
+    }
     QDir cacheDir(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
     if (cacheDir.exists(url.host())){
         cacheDir.cd(url.host());
         cacheDir.cd(path);
         for (const auto &entry: cacheDir.entryList()){
+
+            const auto &u = QUrl(QStringLiteral("%1%2/").arg(url.toString(), entry));
+
+            if (entityUrls.contains(u)){
+                QDir(QStringLiteral("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::CacheLocation), entry)).removeRecursively();
+                continue;
+            }
+
             FSEntry fsEntry{
                 entry,
-                QUrl(QStringLiteral("%1%2/").arg(url.toString(), entry)),
+                u,
                 QStringLiteral("inode/directory"),
                 FSType::DIRECTORY
             };
             entities << fsEntry;
         }
     }
-    entities += m_client->list(url.host(), path);
+
     return entities;
 }
 
-Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> S3FileSystem::open(const QString &bucket, const QString &path){
-    auto resp = m_client->openFile(bucket, path);
+Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> S3FileSystem::open(const QUrl &url){
+    const auto &path = normalizePath(url);
+    auto resp = m_client->openFile(url.host(), path);
     return resp;
 }
 
-long long S3FileSystem::size(const QString &bucket, const QString &path) const {
-    return m_client->size(bucket, path);
+long long S3FileSystem::size(const QUrl &url) const {
+    const auto &path = normalizePath(url);
+    return m_client->size(url.host(), path);
 }
 
-void S3FileSystem::mkdir(const QString &bucket, const QString &path) {
+void S3FileSystem::mkdir(const QUrl &url) {
+    const auto &path = normalizePath(url);
     QDir pathDir(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
-    if (!pathDir.exists(bucket)){
-        pathDir.mkdir(bucket);
+    if (!pathDir.exists(url.host())){
+        pathDir.mkdir(url.host());
     }
-    pathDir.cd(bucket);
+    pathDir.cd(url.host());
     pathDir.mkpath(path);
+}
+
+void S3FileSystem::put(const QUrl &url, const QString &fname) {
+    const auto &path = normalizePath(url);
+    m_client->putFile(url.host(), path, fname);
+}
+
+void S3FileSystem::del(const QUrl &url) {
+    const auto &path = normalizePath(url);
+    m_client->deleteFile(url.host(), path);
+}
+
+QString S3FileSystem::normalizePath(const QUrl &url) const {
+    QString path = url.path();
+    if (path.startsWith(QLatin1Char('/'))) {
+        path.remove(0, 1);
+    }
+    return path;
 }

@@ -27,8 +27,9 @@ public:
     KIO::WorkerResult get(const QUrl &url) override;
     KIO::WorkerResult stat(const QUrl &url) override;
     KIO::WorkerResult listDir(const QUrl &url) override;
-
+    KIO::WorkerResult put(const QUrl &url, int permissions, KIO::JobFlags flags) override;
     KIO::WorkerResult mkdir(const QUrl &url, int permissions) override;
+    KIO::WorkerResult del(const QUrl &url, bool isfile) override;
 
 private:
     QHash<QString, KIO::UDSEntry> m_filesystem;

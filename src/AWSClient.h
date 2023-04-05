@@ -15,6 +15,9 @@ public:
     [[nodiscard]] QList<FSEntry> buckets() const override;
     Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> openFile(const QString &bucket, const QString &path) override;
     virtual long long size(const QString &bucket, const QString& folder) const override;
+    void putFile(const QString &bucket, const QString &path, const QString &fname) override;
+
+    void deleteFile(const QString &bucket, const QString &path) override;
 
 private:
     std::unique_ptr<class Aws::S3::S3Client> m_client;

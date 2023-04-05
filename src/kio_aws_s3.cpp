@@ -57,12 +57,12 @@ kio_aws_s3::~kio_aws_s3()
 KIO::WorkerResult kio_aws_s3::get(const QUrl &url)
 {
     qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting get" << url;
-    QString path = url.path();
-    if (path.startsWith(QLatin1Char('/'))) {
-        path.remove(0, 1);
-    }
+//    QString path = url.path();
+//    if (path.startsWith(QLatin1Char('/'))) {
+//        path.remove(0, 1);
+//    }
 
-    const auto sz = m_fs.size(url.host(), path);
+    const auto sz = m_fs.size(url);
     qCDebug(KIO_AWS_S3_LOG) << "totalSize" << sz;
     totalSize(sz);
 
@@ -70,7 +70,7 @@ KIO::WorkerResult kio_aws_s3::get(const QUrl &url)
     const auto &mime = db.mimeTypeForFile(url.path());
 
     mimeType(mime.name());
-    auto response = m_fs.open(url.host(), path);
+    auto response = m_fs.open(url);
     if (!response.IsSuccess()){
         return KIO::WorkerResult::fail();
     }
@@ -139,7 +139,57 @@ KIO::WorkerResult kio_aws_s3::mkdir(const QUrl &url, int permissions) {
     qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting mkDir" << url;
     auto path = url.path();
     path.remove(0, 1);
-    m_fs.mkdir(url.host(), path);
+    m_fs.mkdir(url);
+    return KIO::WorkerResult::pass();
+}
+
+KIO::WorkerResult kio_aws_s3::put(const QUrl &url, int permissions, KIO::JobFlags flags) {
+    Q_UNUSED(permissions);
+    Q_UNUSED(flags);
+
+    QFileInfo fi(QStringLiteral("%1/%2%3").arg(
+            QStandardPaths::writableLocation(QStandardPaths::CacheLocation),
+            url.host(),
+            url.path()
+            ));
+    auto parentDir = fi.dir();
+    if (!parentDir.exists()){
+        parentDir.mkpath(QLatin1String());
+    }
+
+    QFile f(fi.absoluteFilePath());
+    if (!f.open(QIODevice::WriteOnly)){
+        return KIO::WorkerResult::fail();
+    }
+
+    int n;
+    do {
+        QByteArray buffer;
+        dataReq();
+        n = readData(buffer);
+        if (buffer.size()){
+            f.write(buffer);
+        }
+    } while (n > 0);
+    f.close();
+    m_fs.put(url, fi.absoluteFilePath());
+    f.remove();
+
+    return KIO::WorkerResult::pass();
+}
+
+KIO::WorkerResult kio_aws_s3::del(const QUrl &url, bool isfile) {
+    if (isfile){
+        m_fs.del(url);
+    } else {
+        QDir(
+            QStringLiteral("%1/%2%3").arg(
+            QStandardPaths::writableLocation(QStandardPaths::CacheLocation),
+            url.host(),
+            url.path()
+        )).removeRecursively();
+    }
+
     return KIO::WorkerResult::pass();
 }
 

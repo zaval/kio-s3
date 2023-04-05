@@ -1,6 +1,8 @@
 KIO AWS S3 Worker
 ----------------------
 
+![](https://github.com/zaval/kio-s3/actions/workflows/cmake.yml/badge.svg)
+
 ### Build instructions
 
 ```
