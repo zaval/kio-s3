@@ -28,6 +28,8 @@ public:
     KIO::WorkerResult stat(const QUrl &url) override;
     KIO::WorkerResult listDir(const QUrl &url) override;
 
+    KIO::WorkerResult mkdir(const QUrl &url, int permissions) override;
+
 private:
     QHash<QString, KIO::UDSEntry> m_filesystem;
     S3FileSystem m_fs;

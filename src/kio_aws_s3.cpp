@@ -11,9 +11,9 @@
 #include <KIO/UDSEntry>
 // Qt
 #include <QCoreApplication>
-#include <aws/s3/model/ListObjectsV2Request.h>
 #include <QMimeDatabase>
-#include <QMimeType>
+#include <QStandardPaths>
+
 
 // Pseudo plugin class to embed meta data
 class KIOPluginForMetaData : public QObject
@@ -40,7 +40,11 @@ int kdemain(int argc, char **argv)
 kio_aws_s3::kio_aws_s3(const QByteArray &pool_socket, const QByteArray &app_socket)
     : KIO::WorkerBase("s3", pool_socket, app_socket)
 {
-    qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting up";
+    qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting up" << QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    const auto &cacheDir = QDir(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    if (!cacheDir.exists()){
+        cacheDir.mkpath(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    }
 }
 
 kio_aws_s3::~kio_aws_s3()
@@ -75,18 +79,14 @@ KIO::WorkerResult kio_aws_s3::get(const QUrl &url)
     auto body = &response.GetResult().GetBody();
 
     char buf[1024];
+    long processed = 0;
     while(!body->eof()){
         long i = body->read(buf, std::size(buf)).gcount();
-//        qCDebug(KIO_AWS_S3_LOG) << "read" << i << "bytes";
+        processed += i;
         data(QByteArray(buf, static_cast<int>(i)));
+        processedSize(processed);
     }
 
-
-
-    // now emit the data...
-//    data(m_client.readFile(url.host(), path));
-
-    // and we are done
     return KIO::WorkerResult::pass();
 }
 
@@ -110,7 +110,7 @@ KIO::WorkerResult kio_aws_s3::listDir(const QUrl &url)
     currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_NAME, QStringLiteral("."));
     currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_MIME_TYPE, QStringLiteral("inode/directory"));
     currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_FILE_TYPE, S_IFDIR);
-    currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH);
+    currentFolderEntry.fastInsert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWGRP);
     listEntry(currentFolderEntry);
 
     const auto &entries = m_fs.ls(url);
@@ -121,7 +121,7 @@ KIO::WorkerResult kio_aws_s3::listDir(const QUrl &url)
         entry.fastInsert(KIO::UDSEntry::UDS_MIME_TYPE, e.mime);
         entry.fastInsert(KIO::UDSEntry::UDS_FILE_TYPE, e.type == FSType::REGULAR_FILE ? S_IFREG : S_IFDIR);
         entry.fastInsert(KIO::UDSEntry::UDS_SIZE, e.size);
-        entry.fastInsert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH);
+        entry.fastInsert(KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH | S_IXGRP | S_IROTH | S_IXOTH);
         entry.fastInsert(KIO::UDSEntry::UDS_MODIFICATION_TIME, e.time);
         entry.fastInsert(KIO::UDSEntry::UDS_URL, e.url.toString());
 
@@ -132,6 +132,15 @@ KIO::WorkerResult kio_aws_s3::listDir(const QUrl &url)
 
     return KIO::WorkerResult::pass();
 
+}
+
+KIO::WorkerResult kio_aws_s3::mkdir(const QUrl &url, int permissions) {
+    Q_UNUSED(permissions);
+    qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting mkDir" << url;
+    auto path = url.path();
+    path.remove(0, 1);
+    m_fs.mkdir(url.host(), path);
+    return KIO::WorkerResult::pass();
 }
 
 #include "kio_aws_s3.moc"

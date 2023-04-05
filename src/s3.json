@@ -13,7 +13,13 @@
             ],
             "output": "filesystem",
             "protocol": "s3",
-            "reading": true
+            "makedir": true,
+            "writing": true,
+            "reading": true,
+            "linking": true,
+            "moving": true,
+            "opening": true,
+            "copyFromFile": true
         }
     }
 }
