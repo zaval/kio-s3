@@ -25,4 +25,4 @@ target_link_libraries(
 )
 
 include(GoogleTest)
-gtest_discover_tests(s3_test)
+gtest_discover_tests(s3_test XML_OUTPUT_DIR ${CMAKE_BINARY_DIR}/reports)

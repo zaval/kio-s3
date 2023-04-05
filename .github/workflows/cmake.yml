@@ -27,9 +27,9 @@ jobs:
       env:
         PATCH_VERSION: ${{ github.run_id }}
       run: |
-        cmake --build build --config ${{env.BUILD_TYPE}}
+        cmake --build build --config ${{env.BUILD_TYPE}} -- -j$(nproc)
         cd build
-        ctest --output-junit report.xml
+        ctest
         git config --global --add safe.directory /__w/kio-s3/kio-s3
 
     - name: Test Report
@@ -37,7 +37,7 @@ jobs:
       if: success() || failure()
       with:
         name: CMake Tests
-        path: build/report.xml
+        path: build/reports/*.xml
         reporter: java-junit
 
 #    - name: CPack
