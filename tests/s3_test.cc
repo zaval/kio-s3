@@ -42,13 +42,13 @@ TEST(kio_aws_s3, ls){
     MockAWSClient mock;
     QList<FSEntry> entries;
     entries
-            << FSEntry{QStringLiteral("file.txt"), QUrl(QStringLiteral("s3://name1/folder/file.txt")), QStringLiteral("text/plain"), FSType::REGULAR_FILE}
-            << FSEntry{QStringLiteral("folder"), QUrl(QStringLiteral("s3://name1/folder/folder")), QStringLiteral("inode/directory"), FSType::DIRECTORY};
-    EXPECT_CALL(mock, list(QStringLiteral("name1"), QStringLiteral("folder/")))
+            << FSEntry{QStringLiteral("file.txt"), QUrl(QStringLiteral("s3://name11/folder/file.txt")), QStringLiteral("text/plain"), FSType::REGULAR_FILE}
+            << FSEntry{QStringLiteral("folder"), QUrl(QStringLiteral("s3://name11/folder/folder")), QStringLiteral("inode/directory"), FSType::DIRECTORY};
+    EXPECT_CALL(mock, list(QStringLiteral("name11"), QStringLiteral("folder/")))
             .WillOnce(Return(entries));
 
     S3FileSystem fs(&mock);
-    const auto &folders = fs.ls(QUrl(QStringLiteral("s3://name1/folder/")));
+    const auto &folders = fs.ls(QUrl(QStringLiteral("s3://name11/folder/")));
     EXPECT_TRUE(folders.size() == entries.size());
 }
 
@@ -61,10 +61,10 @@ TEST(kio_aws_s3, open) {
     result.ReplaceBody(reinterpret_cast<Aws::IOStream *>(ss));
     Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> outcome(std::move(result));
 
-    EXPECT_CALL(mock, openFile(QStringLiteral("name1"), QStringLiteral("folder/file.txt")))
+    EXPECT_CALL(mock, openFile(QStringLiteral("name111"), QStringLiteral("folder/file.txt")))
         .WillOnce(Return(std::move(outcome)));
     S3FileSystem fs(&mock);
-    auto res = fs.open(QUrl(QStringLiteral("s3://name1/folder/file.txt")));
+    auto res = fs.open(QUrl(QStringLiteral("s3://name111/folder/file.txt")));
     char data[6];
     res.GetResult().GetBody().read(data, 10);
 
@@ -75,10 +75,10 @@ TEST(kio_aws_s3, open) {
 TEST(kio_aws_s3, size) {
     QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
-    EXPECT_CALL(mock, size(QStringLiteral("name1"), QStringLiteral("folder/file.txt")))
+    EXPECT_CALL(mock, size(QStringLiteral("name1111"), QStringLiteral("folder/file.txt")))
             .WillOnce(Return(10));
     S3FileSystem fs(&mock);
-    auto res = fs.size(QUrl(QStringLiteral("s3://name1/folder/file.txt")));
+    auto res = fs.size(QUrl(QStringLiteral("s3://name1111/folder/file.txt")));
     EXPECT_EQ(res, 10);
 
 }
@@ -87,12 +87,12 @@ TEST(kio_aws_s3, mkdir) {
     QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     S3FileSystem fs(&mock);
-    const QUrl &url = QUrl(QStringLiteral("s3://name1/folder"));
+    const QUrl &url = QUrl(QStringLiteral("s3://name11111/folder"));
     fs.mkdir(url);
 
     QDir d(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
     EXPECT_TRUE(d.exists(url.host() + url.path()));
-    d.cd(url.host() + url.path());
+    d.cd(url.host());
     d.removeRecursively();
 
 }
