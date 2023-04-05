@@ -25,6 +25,7 @@ public:
     void mkdir(const QUrl &url);
     void put(const QUrl &url, const QString &fname);
     void del(const QUrl &url);
+    void copy(const QUrl &src, const QUrl &dst);
 
 //    static const QString cachePath;
 

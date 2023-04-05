@@ -57,10 +57,6 @@ kio_aws_s3::~kio_aws_s3()
 KIO::WorkerResult kio_aws_s3::get(const QUrl &url)
 {
     qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting get" << url;
-//    QString path = url.path();
-//    if (path.startsWith(QLatin1Char('/'))) {
-//        path.remove(0, 1);
-//    }
 
     const auto sz = m_fs.size(url);
     qCDebug(KIO_AWS_S3_LOG) << "totalSize" << sz;
@@ -144,6 +140,7 @@ KIO::WorkerResult kio_aws_s3::mkdir(const QUrl &url, int permissions) {
 }
 
 KIO::WorkerResult kio_aws_s3::put(const QUrl &url, int permissions, KIO::JobFlags flags) {
+    qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting put" << url;
     Q_UNUSED(permissions);
     Q_UNUSED(flags);
 
@@ -152,9 +149,10 @@ KIO::WorkerResult kio_aws_s3::put(const QUrl &url, int permissions, KIO::JobFlag
             url.host(),
             url.path()
             ));
+    qCDebug(KIO_AWS_S3_LOG) << fi.dir();
     auto parentDir = fi.dir();
     if (!parentDir.exists()){
-        parentDir.mkpath(QLatin1String());
+        parentDir.mkpath(parentDir.absolutePath());
     }
 
     QFile f(fi.absoluteFilePath());
@@ -179,6 +177,7 @@ KIO::WorkerResult kio_aws_s3::put(const QUrl &url, int permissions, KIO::JobFlag
 }
 
 KIO::WorkerResult kio_aws_s3::del(const QUrl &url, bool isfile) {
+    qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting del" << url;
     if (isfile){
         m_fs.del(url);
     } else {
@@ -192,6 +191,25 @@ KIO::WorkerResult kio_aws_s3::del(const QUrl &url, bool isfile) {
 
     return KIO::WorkerResult::pass();
 }
+
+//KIO::WorkerResult kio_aws_s3::copy(const QUrl &src, const QUrl &dest, int permissions, KIO::JobFlags flags) {
+//    qCDebug(KIO_AWS_S3_LOG) << "kio_aws_s3 starting copy" << src << dest;
+//    Q_UNUSED(permissions)
+//    Q_UNUSED(flags)
+//
+//    if (src == dest){
+//        return KIO::WorkerResult::fail(KIO::ERR_UNSUPPORTED_ACTION);
+//    }
+//    if (m_filesystem.contains(src.toString()) && m_filesystem[src.toString()].numberValue(KIO::UDSEntry::UDS_FILE_TYPE) == S_IFDIR){
+//        return KIO::WorkerResult::fail(KIO::ERR_UNSUPPORTED_ACTION);
+//    }
+//    if (src.path().isEmpty() || dest.path().isEmpty()){
+//        return KIO::WorkerResult::fail(KIO::ERR_UNSUPPORTED_ACTION);
+//    }
+//
+//    m_fs.copy(src, dest);
+//    return KIO::WorkerResult::pass();
+//}
 
 #include "kio_aws_s3.moc"
 

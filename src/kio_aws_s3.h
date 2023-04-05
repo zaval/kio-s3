@@ -31,6 +31,8 @@ public:
     KIO::WorkerResult mkdir(const QUrl &url, int permissions) override;
     KIO::WorkerResult del(const QUrl &url, bool isfile) override;
 
+//    KIO::WorkerResult copy(const QUrl &src, const QUrl &dest, int permissions, KIO::JobFlags flags) override;
+
 private:
     QHash<QString, KIO::UDSEntry> m_filesystem;
     S3FileSystem m_fs;

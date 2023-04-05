@@ -2,6 +2,7 @@
 #include <aws/s3/model/GetObjectRequest.h>
 #include <aws/s3/model/PutObjectRequest.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
+#include <aws/s3/model/CopyObjectRequest.h>
 #include "AWSClient.h"
 #include <QDebug>
 #include <QDataStream>
@@ -128,4 +129,15 @@ void AWSClient::deleteFile(const QString &bucket, const QString &path) {
         .WithKey(path.toStdString());
 
     m_client->DeleteObject(request);
+}
+
+void AWSClient::copyFile(const QString &src, const QString &dstBucket, const QString &dstKey) {
+    Aws::S3::Model::CopyObjectRequest request;
+    request
+    .WithBucket(dstBucket.toStdString())
+    .WithKey(dstKey.toStdString())
+    .WithCopySource(src.toStdString());
+
+    m_client->CopyObject(request);
+
 }

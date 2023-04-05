@@ -19,6 +19,8 @@ public:
 
     void deleteFile(const QString &bucket, const QString &path) override;
 
+    void copyFile(const QString &src, const QString &dstBucket, const QString &dstKey) override;
+
 private:
     std::unique_ptr<class Aws::S3::S3Client> m_client;
     const QString separator = QDir::separator();

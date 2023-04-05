@@ -39,6 +39,7 @@ public:
     virtual Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error> openFile(const QString &bucket, const QString &path) = 0;
     virtual void putFile(const QString &bucket, const QString &path, const QString &fname) = 0;
     virtual void deleteFile(const QString &bucket, const QString &path) = 0;
+    virtual void copyFile(const QString &src, const QString &dstBucket, const QString &dstKey) = 0;
 };
 
 

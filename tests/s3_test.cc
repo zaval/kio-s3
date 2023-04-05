@@ -16,6 +16,7 @@ public:
     MOCK_METHOD((Aws::Utils::Outcome<Aws::S3::Model::GetObjectResult, Aws::S3::S3Error>), openFile, (const QString &bucket, const QString &path), (override));
     MOCK_METHOD(void, putFile, (const QString &bucket, const QString &path, const QString &fname), (override));
     MOCK_METHOD(void, deleteFile, (const QString &bucket, const QString &path), (override));
+    MOCK_METHOD(void, copyFile, (const QString &src, const QString &dstBucket, const QString &dstKey), (override));
 };
 
 TEST(kio_aws_s3, buckets) {
@@ -90,4 +91,13 @@ TEST(kio_aws_s3, mkdir) {
     d.cd(url.host() + url.path());
     d.removeRecursively();
 
+}
+
+TEST(kio_aws_s3, copy){
+    MockAWSClient mock;
+    EXPECT_CALL(mock, copyFile(QStringLiteral("bucket1/folder/file1.txt"), QStringLiteral("bucket2"), QStringLiteral("folder2/file2.txt")))
+            .WillOnce(Return());
+
+    S3FileSystem fs(&mock);
+    fs.copy(QUrl(QStringLiteral("s3://bucket1/folder/file1.txt")), QUrl(QStringLiteral("s3://bucket2/folder2/file2.txt")));
 }

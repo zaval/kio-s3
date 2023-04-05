@@ -6,6 +6,7 @@
 
 #include <QStandardPaths>
 #include "S3FileSystem.h"
+#include <QDebug>
 
 //const QString S3FileSystem::cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
 
@@ -35,24 +36,27 @@ QList<FSEntry> S3FileSystem::ls(const QUrl &url) {
     QDir cacheDir(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
     if (cacheDir.exists(url.host())){
         cacheDir.cd(url.host());
-        cacheDir.cd(path);
-        for (const auto &entry: cacheDir.entryList()){
+        if (cacheDir.exists(path)){
+            cacheDir.cd(path);
+            for (const auto &entry: cacheDir.entryList(QDir::NoDotAndDotDot)){
 
-            const auto &u = QUrl(QStringLiteral("%1%2/").arg(url.toString(), entry));
+                const auto &u = QUrl(QStringLiteral("%1%2/").arg(url.toString(), entry));
 
-            if (entityUrls.contains(u)){
-                QDir(QStringLiteral("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::CacheLocation), entry)).removeRecursively();
-                continue;
+                if (entityUrls.contains(u)){
+                    QDir(QStringLiteral("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::CacheLocation), entry)).removeRecursively();
+                    continue;
+                }
+
+                FSEntry fsEntry{
+                        entry,
+                        u,
+                        QStringLiteral("inode/directory"),
+                        FSType::DIRECTORY
+                };
+                entities << fsEntry;
             }
-
-            FSEntry fsEntry{
-                entry,
-                u,
-                QStringLiteral("inode/directory"),
-                FSType::DIRECTORY
-            };
-            entities << fsEntry;
         }
+
     }
 
     return entities;
@@ -95,4 +99,15 @@ QString S3FileSystem::normalizePath(const QUrl &url) const {
         path.remove(0, 1);
     }
     return path;
+}
+
+void S3FileSystem::copy(const QUrl &src, const QUrl &dst) {
+    const auto &srcPath = normalizePath(src);
+    const auto &dstPath = normalizePath(dst);
+
+    m_client->copyFile(
+            QStringLiteral("%1/%2").arg(src.host(), srcPath),
+            dst.host(),
+            dstPath
+            );
 }
