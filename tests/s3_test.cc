@@ -20,7 +20,7 @@ public:
 };
 
 TEST(kio_aws_s3, buckets) {
-
+    QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     QList<FSEntry> entries;
     entries
@@ -38,6 +38,7 @@ TEST(kio_aws_s3, buckets) {
 }
 
 TEST(kio_aws_s3, ls){
+    QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     QList<FSEntry> entries;
     entries
@@ -53,6 +54,7 @@ TEST(kio_aws_s3, ls){
 
 
 TEST(kio_aws_s3, open) {
+    QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     Aws::S3::Model::GetObjectResult result;
     auto *ss = new std::istringstream("hello");
@@ -71,6 +73,7 @@ TEST(kio_aws_s3, open) {
 }
 
 TEST(kio_aws_s3, size) {
+    QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     EXPECT_CALL(mock, size(QStringLiteral("name1"), QStringLiteral("folder/file.txt")))
             .WillOnce(Return(10));
@@ -81,6 +84,7 @@ TEST(kio_aws_s3, size) {
 }
 
 TEST(kio_aws_s3, mkdir) {
+    QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     S3FileSystem fs(&mock);
     const QUrl &url = QUrl(QStringLiteral("s3://name1/folder"));
@@ -94,6 +98,7 @@ TEST(kio_aws_s3, mkdir) {
 }
 
 TEST(kio_aws_s3, copy){
+    QStandardPaths::setTestModeEnabled(true);
     MockAWSClient mock;
     EXPECT_CALL(mock, copyFile(QStringLiteral("bucket1/folder/file1.txt"), QStringLiteral("bucket2"), QStringLiteral("folder2/file2.txt")))
             .WillOnce(Return());

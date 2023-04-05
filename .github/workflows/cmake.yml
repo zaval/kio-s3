@@ -27,10 +27,10 @@ jobs:
       env:
         PATCH_VERSION: ${{ github.run_id }}
       run: |
+        git config --global --add safe.directory /__w/kio-s3/kio-s3
         cmake --build build --config ${{env.BUILD_TYPE}} -- -j$(nproc)
         cd build
         ctest
-        git config --global --add safe.directory /__w/kio-s3/kio-s3
 
     - name: Test Report
       uses: dorny/test-reporter@v1
